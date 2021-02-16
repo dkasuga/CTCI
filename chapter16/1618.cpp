@@ -102,11 +102,70 @@ bool doesMatch2(string pattern, string value)
 
     return false;
 }
+
+// 指定されたオフセットから始まりsize文字分，2つの部分文字列が等しいかどうかをチェックする
+bool isEqual(string s1, int offset1, int offset2, int size){
+    for(int i=0;i<size;i++){
+        if(s1[offset1+i] != s1[offset2+i]) return false;
+    }
+    return true;
+}
+// patternとvalueを走査する
+// pattern内の各文字でそれがmainかaltか調べる
+// その後valueの次の文字セットが，それらの文字の元のセット（main or alt）と一致するかどうかを調べる
+bool matches(string pattern, string value, int mainSize, int altSize, int firstAlt){
+    int stringIndex = mainSize;
+    for(int i=1;i<pattern.size();i++){
+        int size = pattern[i] == pattern[0] ? mainSize : altSize;
+        int offset = pattern[i] == pattern[0] ? 0 : firstAlt;
+        if(!isEqual(value, offset, stringIndex, size)){
+            return false;
+        }
+        stringIndex += size;
+    }
+    return true;
+}
+
+bool doesMatch3(string pattern, string value)
+{
+    if (pattern.size() == 0)
+        return value.size() == 0;
+
+    char mainChar = pattern[0];
+    char altChar = mainChar == 'a' ? 'b' : 'a';
+    int size = value.size();
+
+    int countOfMain = countOf(pattern, mainChar);
+    int countOfAlt = (int)pattern.size() - countOfMain;
+    int firstAlt = (int)pattern.size();
+
+    for (int i = 0; i < (int)pattern.size(); i++) {
+        if (pattern[i] == altChar) {
+            firstAlt = i;
+            break;
+        }
+    }
+    int maxMainSize = size / countOfMain;
+
+    for (int mainSize = 0; mainSize <= maxMainSize; mainSize++) {
+        int remainingLength = size - mainSize * countOfMain;
+        string first = value.substr(0, mainSize);
+        if (countOfAlt == 0 || remainingLength % countOfAlt == 0) {
+            int altIndex = firstAlt * mainSize;
+            int altSize = countOfAlt == 0 ? 0 : remainingLength / countOfAlt;
+            if(matches(pattern, value, mainSize, altSize, altIndex)){
+                return true;
+            }
+        }
+    }
+
+    return false;
+}
 int main()
 {
     string pattern, value;
     cin >> pattern >> value;
-    if (doesMatch2(pattern, value)) {
+    if (doesMatch3(pattern, value)) {
         cout << "Yes" << endl;
     } else {
         cout << "No" << endl;
